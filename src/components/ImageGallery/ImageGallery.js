@@ -1,10 +1,18 @@
 import s from './ImageGallery.module.css';
 import { Component } from 'react';
+import API from '../../api/api';
 import ImageGalleryItem from '../ImageGalleryItem/ImageGalleryItem';
+import PendingLoader from '../Loader/Loader';
+import Error from '../Error/Error';
+import Modal from '../Modal/Modal';
 
 class ImageGallery extends Component {
     state = {
-        images: []
+        images: null,
+        error: null,
+        status: 'idle',
+        showModal: false,
+        image: {}
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -12,21 +20,47 @@ class ImageGallery extends Component {
         const newName = this.props.name;
 
         if (prevName !== newName) {
-            fetch(`https://pixabay.com/api/?q=${newName}&key=23195286-789ed49c86d3fd3c443dc5a81&image_type=photo&orientation=horizontal`)
-                .then(res => res.json())
-                .then(images => this.setState({ images: images.hits }))
-                .catch(error => console.log(error));
-        }    
+            this.setState({ status: 'pending' });
+
+            API.fetchImage(newName)
+                .then(images => this.setState({ images: images.hits, status: 'resolved' }))
+                .catch(error => this.setState({ error, status: 'rejected' }));
+        }
+    }
+
+    toggleModal = (e) => {
+        // const image = e.target.value;
+        this.setState(({ showModal }) => ({ showModal: !showModal }));
+        console.log(e.target);
     }
     
     render() {
-        const { images } = this.state;
+        const { images, status, showModal, image } = this.state;
+        const { toggleModal } = this;
+        const { name } = this.props;
 
-         return (
-        <ul className={s.imageGallery}>
-            <ImageGalleryItem images={ images }/>
-        </ul>
-    );
+        if (status === 'idle') {
+            return <></>;
+        }
+
+        if (status === 'pending') {
+            return <PendingLoader />;
+        }
+
+        if (status === 'rejected' || images.length === 0 || name.trim() === '') {
+            return <Error name={name} />;
+        }
+
+        if (status === 'resolved') {
+            return (
+                <>
+                <ul className={s.imageGallery} onClick={toggleModal}>
+                        <ImageGalleryItem images={images} />
+                </ul>
+                    {showModal && (<Modal image={image} />)}
+                </>
+            );
+        }    
     }
 }
 
