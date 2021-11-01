@@ -1,6 +1,7 @@
 import s from './Searchbar.module.css';
-import React, { Component } from 'react';
+import { Component } from 'react';
 import PropTypes from 'prop-types';
+import {ReactComponent as Icon} from '../../icons/search.svg';
 
 class Searchbar extends Component {
     state = {
@@ -11,17 +12,25 @@ class Searchbar extends Component {
         this.setState({ imageName: e.currentTarget.value });
     }
 
-    // fetch(https://pixabay.com/api/?q=что_искать&key=23195286-789ed49c86d3fd3c443dc5a81&image_type=photo&orientation=horizontal).then()
+    handleSubmit = (e) => {
+        e.preventDefault();
+        this.props.onSubmit(this.state.imageName);
+        this.reset();
+    }
+
+    reset = () => {
+        this.setState({ imageName: '' });
+    }
 
     render() {
         const { imageName } = this.state;
-        const { handleChange } = this;
+        const { handleChange, handleSubmit } = this;
 
         return (
             <header className={s.searchBar}>
-                <form className={s.searchForm}>
+                <form className={s.searchForm} onSubmit={handleSubmit}>
                     <button type="submit" className={s.searchForm__button}>
-                        <span className={s.searchForm__buttonLabel}>Search</span>
+                        <Icon />
                     </button>
 
                     <input
@@ -29,8 +38,8 @@ class Searchbar extends Component {
                         type="text"
                         value={imageName}
                         onChange={handleChange}
-                        autocomplete="off"
-                        autofocus
+                        autoComplete="off"
+                        autoFocus
                         placeholder="Search images and photos"
                     />
                 </form>
@@ -40,7 +49,7 @@ class Searchbar extends Component {
 }
 
 Searchbar.propTypes = {
-    imageName: PropTypes.string.isRequired,
+    imageName: PropTypes.string,
 }
 
 export default Searchbar;
