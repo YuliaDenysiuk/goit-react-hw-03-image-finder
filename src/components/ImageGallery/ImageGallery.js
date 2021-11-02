@@ -8,7 +8,7 @@ import Modal from '../Modal/Modal';
 
 class ImageGallery extends Component {
     state = {
-        images: null,
+        images: [],
         error: null,
         status: 'idle',
         showModal: false,
@@ -29,9 +29,9 @@ class ImageGallery extends Component {
     }
 
     toggleModal = (e) => {
-        // const image = e.target.value;
+        const imageId = e.target.parentNode.getAttribute('key');
         this.setState(({ showModal }) => ({ showModal: !showModal }));
-        console.log(e.target);
+        console.log(imageId);
     }
     
     render() {
