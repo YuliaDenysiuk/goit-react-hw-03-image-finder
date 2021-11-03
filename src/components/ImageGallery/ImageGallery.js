@@ -21,13 +21,22 @@ class ImageGallery extends Component {
     componentDidUpdate(prevProps, prevState) {
         const prevName = prevProps.name;
         const newName = this.props.name;
-        const page = this.state.page;
+        const prevPage = prevState.page;
+        const newPage = this.state.page;
 
         if (prevName !== newName) {
             this.setState({ status: 'pending' });
 
-            API.fetchImage(newName, page)
-                .then(images => this.setState({ images: images.hits, status: 'resolved' }))
+            API.fetchImage(newName)
+                .then(images => this.setState({ images: images.hits, status: 'resolved'}))
+                .catch(error => this.setState({ error, status: 'rejected' }));
+        }
+
+        if (prevPage !== newPage) {
+            this.setState({ status: 'pending' });
+
+            API.fetchImage(newName, newPage)
+                .then(images => this.setState({ images: images.hits, status: 'resolved', page: prevPage + 1 }))
                 .catch(error => this.setState({ error, status: 'rejected' }));
         }
     }
@@ -45,7 +54,6 @@ class ImageGallery extends Component {
         this.setState(({page}) => ({page: page + 1}));
     }
 
-    
     render() {
         const { images, status, showModal, imageIndex } = this.state;
         const { openModal, closeModal, loadMore } = this;
