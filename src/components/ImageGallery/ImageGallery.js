@@ -28,16 +28,18 @@ class ImageGallery extends Component {
             this.setState({ status: 'pending' });
 
             API.fetchImage(newName)
-                .then(images => this.setState({ images: images.hits, status: 'resolved'}))
+                .then(images => this.setState({ images: images.hits, status: 'resolved', page: 1}))
                 .catch(error => this.setState({ error, status: 'rejected' }));
         }
 
-        if (prevPage !== newPage) {
+        if ((prevPage !== newPage) && (newPage > 1)) {
             this.setState({ status: 'pending' });
 
             API.fetchImage(newName, newPage)
-                .then(images => this.setState({ images: images.hits, status: 'resolved', page: prevPage + 1 }))
+                .then(images => this.setState({ images: [...this.state.images, ...images.hits], status: 'resolved' }))
                 .catch(error => this.setState({ error, status: 'rejected' }));
+
+            this.scroll();
         }
     }
 
@@ -51,7 +53,16 @@ class ImageGallery extends Component {
     }
 
     loadMore = () => {
-        this.setState(({page}) => ({page: page + 1}));
+        this.setState(({page}) => ({page: page + 1}));            
+    }
+
+    scroll = () => {
+        setTimeout(() => {
+            window.scrollTo({
+              top: document.documentElement.scrollHeight,
+              behavior: 'smooth',
+            });
+          }, 1000);
     }
 
     render() {
