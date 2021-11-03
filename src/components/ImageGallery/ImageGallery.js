@@ -1,7 +1,9 @@
 import s from './ImageGallery.module.css';
 import { Component } from 'react';
+import PropTypes from 'prop-types';
 import API from '../../api/api';
 import ImageGalleryItem from '../ImageGalleryItem/ImageGalleryItem';
+import Button from '../Button/Button';
 import PendingLoader from '../Loader/Loader';
 import Error from '../Error/Error';
 import Modal from '../Modal/Modal';
@@ -9,34 +11,44 @@ import Modal from '../Modal/Modal';
 class ImageGallery extends Component {
     state = {
         images: [],
+        page: 1,
         error: null,
         status: 'idle',
         showModal: false,
-        image: {}
+        imageIndex: null
     }
 
     componentDidUpdate(prevProps, prevState) {
         const prevName = prevProps.name;
         const newName = this.props.name;
+        const page = this.state.page;
 
         if (prevName !== newName) {
             this.setState({ status: 'pending' });
 
-            API.fetchImage(newName)
+            API.fetchImage(newName, page)
                 .then(images => this.setState({ images: images.hits, status: 'resolved' }))
                 .catch(error => this.setState({ error, status: 'rejected' }));
         }
     }
 
-    toggleModal = (e) => {
-        const imageId = e.target.parentNode.getAttribute('key');
-        this.setState(({ showModal }) => ({ showModal: !showModal }));
-        console.log(imageId);
+    openModal = (e) => {
+        const imageIndex = e.target.getAttribute('data-index');
+        this.setState({ showModal: true, imageIndex });
     }
+
+    closeModal = () => {        
+        this.setState({ showModal: false, imageIndex: null });
+    }
+
+    loadMore = () => {
+        this.setState(({page}) => ({page: page + 1}));
+    }
+
     
     render() {
-        const { images, status, showModal, image } = this.state;
-        const { toggleModal } = this;
+        const { images, status, showModal, imageIndex } = this.state;
+        const { openModal, closeModal, loadMore } = this;
         const { name } = this.props;
 
         if (status === 'idle') {
@@ -54,14 +66,22 @@ class ImageGallery extends Component {
         if (status === 'resolved') {
             return (
                 <>
-                <ul className={s.imageGallery} onClick={toggleModal}>
-                        <ImageGalleryItem images={images} />
+                <ul className={s.imageGallery} onClick={openModal}>
+                    {images.map(
+                        ({ id, webformatURL, tags}, index) => 
+                        <ImageGalleryItem key={id} webformatURL={webformatURL} tags={tags} index={index}/>
+                    )}                       
                 </ul>
-                    {showModal && (<Modal image={image} />)}
+                    <Button onLoadMore={loadMore}/>
+                    {showModal && (<Modal image={images[imageIndex]} onClose={closeModal} />)}
                 </>
             );
         }    
     }
+}
+
+ImageGallery.propTypes = {
+    name: PropTypes.string.isRequired,
 }
 
 export default ImageGallery;
